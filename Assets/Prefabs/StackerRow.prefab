@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2786990046717082182
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8312370024322168424}
+  - component: {fileID: 4663001861821972966}
+  m_Layer: 0
+  m_Name: StackerRow
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8312370024322168424
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2786990046717082182}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -7, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4663001861821972966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2786990046717082182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17258ccd832567c4dbaf42ad22ac10a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stackerCubePrefab: {fileID: 9026803117793959595, guid: d624b165d83272444b59cd8ecb182235,
+    type: 3}
+  _stackerCubeExplosion: {fileID: 8178379864121857431, guid: d30b3fc314c9c7f4aaa39376b1df1569,
+    type: 3}
+  _speed: 0.25
+  _thickness: 4
+  _cubeLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  _currHeight: 0
+  _loseCubeMaterial: {fileID: 2100000, guid: 40db1d0d756d4ea4e98df4daf2141ff3, type: 2}
+  _defaultCubeMaterial: {fileID: 2100000, guid: 9752b146a457e7e42ac81e0968366dda,
+    type: 2}
+  _currDirection: -1
+  _speedTimer: 0
+  _dividedWidth: 0
+  _endingWidth: 0
+  _currStageLimitLeft: 0
+  _currStageLimitRight: 0
+  _active: 0
+  _didMiss: 0
+  _moveIndex: 0
