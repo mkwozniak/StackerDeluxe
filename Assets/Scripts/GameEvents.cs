@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace wozware.StackerDeluxe
@@ -250,6 +248,70 @@ namespace wozware.StackerDeluxe
 			});
 
 			// sfx mute toggle //
+
+			// screen mode dropdown //
+
+			_ui.Dropdown_ScreenMode.onValueChanged.AddListener((val) =>
+			{
+				switch(val)
+				{
+					case 0:
+						UI.CURRENT_SCREEN_MODE = FullScreenMode.ExclusiveFullScreen;
+						break;
+					case 1:
+						UI.CURRENT_SCREEN_MODE = FullScreenMode.FullScreenWindow;
+						break;
+					case 2:
+						UI.CURRENT_SCREEN_MODE = FullScreenMode.MaximizedWindow;
+						break;
+					case 3:
+						UI.CURRENT_SCREEN_MODE = FullScreenMode.Windowed;
+						break;
+				}
+
+				Screen.fullScreenMode = UI.CURRENT_SCREEN_MODE;
+				_saveData.ScreenMode = UI.CURRENT_SCREEN_MODE;
+				Debug.Log((int)UI.CURRENT_SCREEN_MODE);
+			});
+
+			// screen mode dropdown //
+
+			// resolution dropdown //
+
+			_ui.Dropdown_Resolutions.onValueChanged.AddListener((val) =>
+			{
+				UI.CURRENT_RESOLUTION = UI.RESOLUTIONS[val];
+				UI.CURRENT_REFRESH_RATE = UI.RESOLUTIONS[val].refreshRateRatio;
+
+				Screen.SetResolution(UI.CURRENT_RESOLUTION.width, 
+					UI.CURRENT_RESOLUTION.height, 
+					UI.CURRENT_SCREEN_MODE, 
+					UI.CURRENT_REFRESH_RATE);
+
+				_saveData.ResolutionWidth = UI.CURRENT_RESOLUTION.width;
+				_saveData.ResolutionHeight = UI.CURRENT_RESOLUTION.height;
+				_saveData.ScreenMode = UI.CURRENT_SCREEN_MODE;
+				_saveData.RefreshRate = UI.CURRENT_REFRESH_RATE.numerator;
+				_saveData.RefreshRateDenom = UI.CURRENT_REFRESH_RATE.denominator;
+			});
+
+			// resolution dropdown //
+
+			// bloom slider //
+
+			_ui.Slider_Bloom.onValueChanged.AddListener((val) =>
+			{
+				UnityEngine.Rendering.Universal.Bloom bloom;
+				bool hasBloom = _ui.PPVolume.sharedProfile.TryGet(out bloom);
+				if (!hasBloom)
+					return;
+				// override bloom
+				float or = _ui.BloomIntensityMax * val;
+				bloom.intensity.Override(or);
+				_saveData.BloomIntensity = or;
+			});
+
+			// bloom slider //
 		}
 	}
 }

@@ -38,6 +38,11 @@ namespace wozware.StackerDeluxe
 			get { return _didMiss; }
 		}
 
+		public bool Active
+		{
+			set { _active = value; }
+		}
+
 		private void Awake()
 		{
 			_active = false;

@@ -1,16 +1,21 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using CanvasText = TMPro.TextMeshProUGUI;
 using Image = UnityEngine.UI.Image;
-using System;
 using Slider = UnityEngine.UI.Slider;
 using Toggle = UnityEngine.UI.Toggle;
-using TMPro.EditorUtilities;
+using Dropdown = TMPro.TMP_Dropdown;
 
 namespace wozware.StackerDeluxe
 {
 	public class UI : MonoBehaviour
 	{
+		public static Resolution[] RESOLUTIONS;
+		public static Resolution CURRENT_RESOLUTION;
+		public static RefreshRate CURRENT_REFRESH_RATE;
+		public static FullScreenMode CURRENT_SCREEN_MODE;
+
 		public Action OnFadedIn;
 		public Action OnFadedOut;
 
@@ -33,11 +38,18 @@ namespace wozware.StackerDeluxe
 		public ButtonVisualModifier ApplySettingsBtn;
 		public Slider Slider_MusicVolume;
 		public Slider Slider_SFXVolume;
+		public Slider Slider_Bloom;
 		public Toggle Toggle_MusicMute;
 		public Toggle Toggle_SFXMuted;
+		public Dropdown Dropdown_Resolutions;
+		public Dropdown Dropdown_ScreenMode;
+		public UnityEngine.Rendering.Volume PPVolume;
+		public float BloomIntensityMax = 0.5f;
 
-		[SerializeField] private Image _fadeScreen;
-		[SerializeField] private CanvasText _timeEntryPrefab;
+		[SerializeField] Image _fadeScreen;
+		[SerializeField] CanvasText _timeEntryPrefab;
+
+		[Header("UI Parents")]
 		[SerializeField] GameObject _menuParent;
 		[SerializeField] GameObject _gameParent;
 		[SerializeField] GameObject _gameOverParent;
@@ -46,7 +58,11 @@ namespace wozware.StackerDeluxe
 		[SerializeField] CanvasText _countdownText;
 		[SerializeField] GameObject _winParent;
 		[SerializeField] Transform _timeParent;
+		[SerializeField] Transform _timeEntryParent;
 		[SerializeField] GameObject _settingsParent;
+		[SerializeField] GameObject _finishParent;
+
+		[Header("Time Panel")]
 		[SerializeField] CanvasText _timeTextMin_D0;
 		[SerializeField] CanvasText _timeTextMin_D1;
 		[SerializeField] CanvasText _timeTextSec_D0;
@@ -58,25 +74,31 @@ namespace wozware.StackerDeluxe
 		[SerializeField] CustomTextProperties _timeGainText_Dec;
 		[SerializeField] CustomTextProperties _timeGainText_D1;
 		[SerializeField] CustomTextProperties _timeGainText_Unit;
-		[SerializeField] RectTransform _noticePanel;
-		[SerializeField] Image _noticePanelBorderImage;
-		[SerializeField] CustomTextProperties _noticePanelTextProps;
-		[SerializeField] CustomTextProperties _finishTextProps;
-		[SerializeField] Transform _timeEntryParent;
-		[SerializeField] GameObject _finishParent;
-		[SerializeField] Image _finishParentBorder;
 		[SerializeField] Color _timeGainAddColor;
 		[SerializeField] Color _timeGainLoseColor;
 		[ColorUsage(true, true), SerializeField] Color _timeGainAddGlowColor;
 		[ColorUsage(true, true), SerializeField] Color _timeGainLoseGlowColor;
+
+		[Header("Settings Panel")]
 		[SerializeField] CustomTextProperties _settingsAppliedText;
 		[SerializeField] CustomTextProperties _musicMuteText;
 		[SerializeField] CustomTextProperties _sfxMuteText;
+
+		[Header("Notice Panel")]
+		[SerializeField] CustomTextProperties _noticePanelTextProps;
+		[SerializeField] RectTransform _noticePanel;
+		[SerializeField] Image _noticePanelBorderImage;
+
+		[Header("Game Over / Finish")]
+		[SerializeField] CustomTextProperties _finishTextProps;
+		[SerializeField] Image _finishParentBorder;
 
 		[Header("States")]
 		[SerializeField] float _currFadeLerp = 0f;
 		[SerializeField] bool _isFading = false;
 		[SerializeField] byte _fadeScreenState = 0;
+
+		// local members //
 
 		Color _currFadeColor;
 		Color _fadeColorIn = new Color(0, 0, 0, 1);
@@ -87,6 +109,8 @@ namespace wozware.StackerDeluxe
 		float _noticePanelLingerTimer;
 		float _noticePanelLerp;
 		List<GameObject> _currTimeEntries = new();
+
+		// local members //
 
 		#region Unity Methods
 
@@ -200,6 +224,30 @@ namespace wozware.StackerDeluxe
 			Color sc1 = data.SFXMuted ? _timeGainLoseColor : _timeGainAddColor;
 			Color sc2 = data.SFXMuted ? _timeGainLoseGlowColor : _timeGainAddGlowColor;
 			_sfxMuteText.SetColor(sc1, sc2);
+			
+			int selectedRes = 0;
+			for(int i = 0; i < RESOLUTIONS.Length; i++)
+			{
+				if (RESOLUTIONS[i].width == data.ResolutionWidth && 
+					RESOLUTIONS[i].height == data.ResolutionHeight &&
+					CURRENT_SCREEN_MODE == data.ScreenMode &&
+					RESOLUTIONS[i].refreshRateRatio.numerator == data.RefreshRate &&
+					RESOLUTIONS[i].refreshRateRatio.denominator == data.RefreshRateDenom) 
+				{
+					selectedRes = i;
+				}
+			}
+
+			Dropdown_Resolutions.SetValueWithoutNotify(selectedRes);
+			Dropdown_ScreenMode.SetValueWithoutNotify((int)data.ScreenMode);
+
+			UnityEngine.Rendering.Universal.Bloom bloom;
+			bool hasBloom = PPVolume.sharedProfile.TryGet(out bloom);
+			if (hasBloom)
+			{
+				bloom.intensity.Override(data.BloomIntensity);
+				Slider_Bloom.value = 1 / (BloomIntensityMax / bloom.intensity.value);
+			}
 
 			_settingsParent.SetActive(false);
 		}
@@ -440,6 +488,26 @@ namespace wozware.StackerDeluxe
 			_finishTextProps.SetText(msg);
 			_finishParent.SetActive(true);
 			_finishParentBorder.color = c;
+		}
+
+		public void GenerateResolutions()
+		{
+			RESOLUTIONS = Screen.resolutions;
+
+			List<Resolution> reses = new List<Resolution>(RESOLUTIONS);
+			reses.Reverse();
+
+			RESOLUTIONS = reses.ToArray();
+
+			Dropdown_Resolutions.ClearOptions();
+			List<string> options = new();
+
+			foreach (var res in RESOLUTIONS)
+			{
+				options.Add($"{res.width} x {res.height} {res.refreshRateRatio.numerator}Hz");
+			}
+
+			Dropdown_Resolutions.AddOptions(options);
 		}
 
 		#endregion

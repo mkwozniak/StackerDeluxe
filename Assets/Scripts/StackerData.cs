@@ -35,6 +35,12 @@ namespace wozware.StackerDeluxe
 		public float SFXVolume;
 		public bool MusicMuted;
 		public bool SFXMuted;
+		public int ResolutionWidth;
+		public int ResolutionHeight;
+		public uint RefreshRate;
+		public uint RefreshRateDenom;
+		public FullScreenMode ScreenMode;
+		public float BloomIntensity;
 	}
 
 	public enum LogTypes

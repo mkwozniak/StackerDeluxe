@@ -97,7 +97,9 @@ namespace wozware.StackerDeluxe
 		{
 			_saveFilePath = GetSaveFilePath();
 			CreateOrLoadSaveFile();
+			_ui.GenerateResolutions();
 			_ui.UpdateUIFromSettings(_saveData);
+			Screen.SetResolution(_saveData.ResolutionWidth, _saveData.ResolutionHeight, _saveData.ScreenMode);
 			_gameData.Initialize();
 
 			// link actions
@@ -156,6 +158,16 @@ namespace wozware.StackerDeluxe
 				// set default save data
 				data.MusicVolume = 1f;
 				data.SFXVolume = 1f;
+
+				UI.CURRENT_RESOLUTION = Screen.currentResolution;
+				UI.CURRENT_SCREEN_MODE = Screen.fullScreenMode;
+
+				data.ResolutionWidth = UI.CURRENT_RESOLUTION.width;
+				data.ResolutionHeight = UI.CURRENT_RESOLUTION.height;
+				data.ScreenMode = UI.CURRENT_SCREEN_MODE;
+				data.RefreshRate = UI.CURRENT_RESOLUTION.refreshRateRatio.numerator;
+				data.RefreshRateDenom = UI.CURRENT_RESOLUTION.refreshRateRatio.denominator;
+				data.BloomIntensity = _ui.BloomIntensityMax;
 
 				Log(LogTypes.FILE, "Save data in path does not exist. Creating new default file.");
 				file = File.Create(_saveFilePath);
@@ -342,6 +354,7 @@ namespace wozware.StackerDeluxe
 			SetMusic(SoundIDs.MusicGameOver);
 			if (timeout)
 			{
+				_currStackerRow.Active = false;
 				CreateSFX(SoundIDs.VFX_Timeout);
 				return;
 			}
