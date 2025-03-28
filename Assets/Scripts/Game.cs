@@ -35,6 +35,7 @@ namespace wozware.StackerDeluxe
 		[SerializeField] Transform _particleParent;
 		[SerializeField] Transform _bottomStage;
 		[SerializeField] Transform _emptyPoint;
+		[SerializeField] Transform _challengerWorldParent;
 		[SerializeField] AudioSource _musicSource;
 		[SerializeField] Transform _sfxParent;
 		[SerializeField] AudioSource _sfxPrefab;
@@ -67,6 +68,7 @@ namespace wozware.StackerDeluxe
 		[SerializeField] SoundIDs _nextMusicID = SoundIDs.Empty;
 		[SerializeField] byte _musicState = 0;
 		[SerializeField] bool _timerEnabled = false;
+		[SerializeField] bool _inSettingsFromPause = false;
 
 		[Header("Camera States")]
 		[SerializeField] bool _lerpingCamera = false;
@@ -95,12 +97,12 @@ namespace wozware.StackerDeluxe
 
 		private void Awake()
 		{
+			_gameData.Initialize();
 			_saveFilePath = GetSaveFilePath();
 			CreateOrLoadSaveFile();
 			_ui.GenerateResolutions();
 			_ui.UpdateUIFromSettings(_saveData);
 			Screen.SetResolution(_saveData.ResolutionWidth, _saveData.ResolutionHeight, _saveData.ScreenMode);
-			_gameData.Initialize();
 
 			// link actions
 			LinkGameEvents();
@@ -168,6 +170,7 @@ namespace wozware.StackerDeluxe
 				data.RefreshRate = UI.CURRENT_RESOLUTION.refreshRateRatio.numerator;
 				data.RefreshRateDenom = UI.CURRENT_RESOLUTION.refreshRateRatio.denominator;
 				data.BloomIntensity = _ui.BloomIntensityMax;
+				data.LevelRecords = new List<LevelRecord>(RecordKeeper.LVL_RECORDS.Values);
 
 				Log(LogTypes.FILE, "Save data in path does not exist. Creating new default file.");
 				file = File.Create(_saveFilePath);
@@ -187,6 +190,11 @@ namespace wozware.StackerDeluxe
 			Log(LogTypes.FILE, "Loading save data from existing file.");
 			file = File.Open(_saveFilePath, FileMode.Open);
 			SaveData data = (SaveData)formatter.Deserialize(file);
+
+			for(int i = 0; i < data.LevelRecords.Count; i++)
+			{
+				RecordKeeper.LVL_RECORDS[data.LevelRecords[i].Name] = data.LevelRecords[i];
+			}
 
 			// load save data
 			_saveData = data;
@@ -244,7 +252,6 @@ namespace wozware.StackerDeluxe
 			SetMusic(SoundIDs.MusicMainMenu);
 			_mainMenuParticleParent.SetActive(true);
 			_ui.StartFadeOut();
-			Debug.Log("entering menu mode");
 		}
 
 		private void FinishMenuMode()
@@ -261,6 +268,7 @@ namespace wozware.StackerDeluxe
 			_mainMenuParticleParent.SetActive(false);
 			_ui.OnFadedIn -= EnterPregameMode;
 			_stageParent.SetActive(true);
+			_ui.ExitGamePaused();
 			_gridRenderer.material = _defaultGridMaterial;
 			_ui.EnterPregame();
 
@@ -295,6 +303,7 @@ namespace wozware.StackerDeluxe
 			_finalGameWinTimer = 0f;
 			_gameFinishTimer = 0f;
 			_gameFinishDestroyTimer = 0f;
+			RecordKeeper.ResetCurrentRecords();
 			_ui.ClearTimeEntries();
 		}
 
@@ -321,6 +330,78 @@ namespace wozware.StackerDeluxe
 			CreateSFX(SoundIDs.ButtonClick, 0);
 		}
 
+		private void EnterChallengerWorld()
+		{
+			_ui.StartFadeIn();
+			_ui.OnFadedIn += _ui.ExitMainMenu;
+			_ui.OnFadedIn += OpenChallengerWorld;
+		}
+
+		private void ExitChallengerWorld()
+		{
+			_ui.StartFadeIn();
+			_ui.OnFadedIn += _ui.EnterMainMenu;
+			_ui.OnFadedIn += MoveCameraToEmptyPoint;
+			_ui.OnFadedIn += CloseChallengerWorld;
+		}
+
+		private void OpenChallengerWorld()
+		{
+			_ui.EnterChallenger();
+			_challengerWorldParent.gameObject.SetActive(true);
+			SetMusic(SoundIDs.MusicChallenger);
+			StartCameraDamp(_challengerWorldParent.position, _defaultCameraDampSpeed);
+			_ui.OnFadedIn -= OpenChallengerWorld;
+			_ui.StartFadeOut();
+		}
+
+		private void CloseChallengerWorld()
+		{
+			_ui.ExitChallenger();
+			SetMusic(SoundIDs.MusicMainMenu);
+			_challengerWorldParent.gameObject.SetActive(false);
+			_ui.OnFadedIn -= CloseChallengerWorld;
+		}
+
+		private void EnterPause()
+		{
+			_gameState = GameStates.GamePaused;
+			PauseCurrentRowMusic(true);
+			_ui.EnterGamePaused();
+			_ui.ExitGame();
+			_currStackerRow.Pause(true);
+		}
+
+		private void ExitPause(bool toExit)
+		{
+			if(toExit)
+			{
+				_ui.ExitGamePaused();
+				return;
+			}
+
+			_gameState = GameStates.GameActive;
+			_ui.EnterGame();
+			_ui.ExitGamePaused();
+			PauseCurrentRowMusic(false);
+			_currStackerRow.Pause(false);
+		}
+
+		private void MoveCameraToEmptyPoint()
+		{
+			StartCameraDamp(_emptyPoint.transform.position, _defaultCameraDampSpeed);
+			_ui.OnFadedIn -= MoveCameraToEmptyPoint;
+		}
+
+		private void MoveCameraBackToStackerRow()
+		{
+			Vector3 nextDampPos = new Vector3(_camera.transform.position.x, 
+				_currStackerRow.transform.position.y, 
+				_camera.transform.position.z);
+			StartCameraDamp(nextDampPos, _defaultCameraDampSpeed);
+			_ui.OnFadedIn -= MoveCameraBackToStackerRow;
+		}
+
 		#endregion Game
 
 		#region Game Over
@@ -336,6 +417,7 @@ namespace wozware.StackerDeluxe
 		{
 			_ui.OnFadedIn -= FinishGameOverEnter;
 			ExitGameMode();
+			_ui.ExitGamePaused();
 			_ui.StartFadeOut();
 			RenderSettings.skybox = _skybox0;
 			_ui.EnterGameOver();
@@ -346,7 +428,12 @@ namespace wozware.StackerDeluxe
 			_gameState = GameStates.GameOver;
 			_ui.ShowFinish(fail: true);
 			_gridRenderer.material = _loseGridMaterial;
-			OnGameOver();
+
+			if(OnGameOver != null)
+			{
+				OnGameOver();
+			}
+
 			_gameFinishDestroyTimer = 0f;
 			_finalGameOverTimer = 0f;
 			_finalGameWinTimer = 0f;
@@ -376,14 +463,47 @@ namespace wozware.StackerDeluxe
 		{
 			_ui.OnFadedIn -= FinishGameWinEnter;
 			ExitWinMode();
+			_ui.ExitGamePaused();
 			_ui.StartFadeOut();
 			RenderSettings.skybox = _skybox0;
 			_ui.EnterGameWin();
+
+			_ui.SetGameWinLabels(_currLevel.Name, GetTimeStrings(_currTimeLeft), 
+				GetTimeStrings(RecordKeeper.LVL_RECORDS[_currLevel.Name].TimeLeft),
+				RecordKeeper.MISSED.ToString(), RecordKeeper.PERFECTS.ToString());
+
+			float timeRecord = RecordKeeper.LVL_RECORDS[_currLevel.Name].TimeLeft;
+			if (_currTimeLeft > timeRecord)
+			{
+				timeRecord = _currTimeLeft;
+				CreateSFX(SoundIDs.VFX_NewRecord);
+				_ui.ShowNewRecordLabel(true);
+			}
+
+			if(RecordKeeper.MISSED <= 0)
+			{
+				_ui.ShowPerfectScoreLabel(true);
+			}
+
+			RecordKeeper.LVL_RECORDS[_currLevel.Name] = 
+				new LevelRecord(_currLevel.Name, timeRecord, 
+				RecordKeeper.MISSED, RecordKeeper.PERFECTS);
+
+			for(int i = 0; i < _saveData.LevelRecords.Count; i++)
+			{
+				if(_currLevel.name == _saveData.LevelRecords[i].Name)
+				{
+					_saveData.LevelRecords[i] = RecordKeeper.LVL_RECORDS[_currLevel.Name];
+					break;
+				}
+			}
 		}
 
 		private void ExitWinMode()
 		{
 			_stageParent.SetActive(false);
+			_ui.ShowNewRecordLabel(false);
+			_ui.ShowPerfectScoreLabel(false);
 			_ui.ExitGameWin();
 		}
 
@@ -410,7 +530,7 @@ namespace wozware.StackerDeluxe
 
 		private void UpdateMainMenu()
 		{
-			return; // main menu has no update functionality at this time
+			_ui.UpdateMenuCredits();
 		}
 
 		private void UpdateGameActive()
@@ -418,6 +538,12 @@ namespace wozware.StackerDeluxe
 			if (_inCountdown)
 			{
 				UpdatePregameCountdown();
+				return;
+			}
+
+			if(Input.GetKeyDown(KeyCode.Escape) && _canPlaceStacker)
+			{
+				EnterPause();
 				return;
 			}
 
@@ -430,6 +556,15 @@ namespace wozware.StackerDeluxe
 			{
 				PlaceCurrentStackerRow();
 				_canPlaceStacker = false;
+				return;
+			}
+		}
+
+		private void UpdateGamePaused()
+		{
+			if (Input.GetKeyDown(KeyCode.Escape) && !_inSettingsFromPause)
+			{
+				ExitPause(toExit: false);
 				return;
 			}
 		}
@@ -701,6 +836,18 @@ namespace wozware.StackerDeluxe
 			_musicSource.Play();
 		}
 
+		private void PauseCurrentRowMusic(bool pause)
+		{
+			if(pause)
+			{
+				_musicSource.Pause();
+				return;
+			}
+
+			_musicSource.Play();
+
+		}
+
 		private bool TrySelectStandardLevel(LevelDifficulties difficulty)
 		{
 			Log(LogTypes.GAME, $"Try Selecte Difficulty: {difficulty}");
@@ -768,6 +915,8 @@ namespace wozware.StackerDeluxe
 			_currTimeLeft += _currLevel.RowList[_currHeight].SecondsGain * timeGain;
 			_ui.SetTimeGainText(!_currStackerRow.DidMiss, timeGainStr);
 			_ui.ActivateNoticePanel(_currStackerRow.DidMiss);
+
+			var record = _currStackerRow.DidMiss ? RecordKeeper.MISSED += 1 : RecordKeeper.PERFECTS += 1;
 
 			CreateTimeEntry();
 			SpawnStackerRow();

@@ -36,13 +36,24 @@ namespace wozware.StackerDeluxe
 		public ButtonVisualModifier SettingsBtn_Menu;
 		public ButtonVisualModifier ExitSettingsBtn;
 		public ButtonVisualModifier ApplySettingsBtn;
+		public ButtonVisualModifier ChallengerBtn;
+		public ButtonVisualModifier ChallengerExitBtn;
+		public ButtonVisualModifier Pause_ResumeBtn;
+		public ButtonVisualModifier Pause_SettingsBtn;
+		public ButtonVisualModifier Pause_ExitBtn;
+		public ButtonVisualModifier AchievementsBtn;
+		public ButtonVisualModifier AchievementsExitBtn;
+
 		public Slider Slider_MusicVolume;
 		public Slider Slider_SFXVolume;
 		public Slider Slider_Bloom;
+
 		public Toggle Toggle_MusicMute;
 		public Toggle Toggle_SFXMuted;
+
 		public Dropdown Dropdown_Resolutions;
 		public Dropdown Dropdown_ScreenMode;
+
 		public UnityEngine.Rendering.Volume PPVolume;
 		public float BloomIntensityMax = 0.5f;
 
@@ -61,6 +72,9 @@ namespace wozware.StackerDeluxe
 		[SerializeField] Transform _timeEntryParent;
 		[SerializeField] GameObject _settingsParent;
 		[SerializeField] GameObject _finishParent;
+		[SerializeField] GameObject _challengerParent;
+		[SerializeField] GameObject _pauseParent;
+		[SerializeField] GameObject _achievementParent;
 
 		[Header("Time Panel")]
 		[SerializeField] CanvasText _timeTextMin_D0;
@@ -88,15 +102,27 @@ namespace wozware.StackerDeluxe
 		[SerializeField] CustomTextProperties _noticePanelTextProps;
 		[SerializeField] RectTransform _noticePanel;
 		[SerializeField] Image _noticePanelBorderImage;
+		[SerializeField] CustomTextProperties _creditsText;
+		[SerializeField] float _creditsFloatSpeed = 10f;
+		[SerializeField] int _creditsFlickerLimit = 3;
 
 		[Header("Game Over / Finish")]
 		[SerializeField] CustomTextProperties _finishTextProps;
 		[SerializeField] Image _finishParentBorder;
+		[SerializeField] CustomTextProperties _finishLevelTitleText;
+		[SerializeField] CustomTextProperties _finishLevelTimeText;
+		[SerializeField] CustomTextProperties _finishLevelMissesText;
+		[SerializeField] CustomTextProperties _finishLevelPerfectsText;
+		[SerializeField] CustomTextProperties _finishLevelNoticeText;
+		[SerializeField] CustomTextProperties _finishLevelRecordTimeText;
+		[SerializeField] CustomTextProperties _finishNewRecordLabel;
+		[SerializeField] CustomTextProperties _finishPerfectScoreLabel;
 
 		[Header("States")]
 		[SerializeField] float _currFadeLerp = 0f;
 		[SerializeField] bool _isFading = false;
 		[SerializeField] byte _fadeScreenState = 0;
+		[SerializeField][Multiline] List<string> _credits;
 
 		// local members //
 
@@ -109,6 +135,9 @@ namespace wozware.StackerDeluxe
 		float _noticePanelLingerTimer;
 		float _noticePanelLerp;
 		List<GameObject> _currTimeEntries = new();
+		int _currCreditIndex = 0;
+		RectTransform _creditsTransform;
+		Vector2 _creditsOriginalPos;
 
 		// local members //
 
@@ -119,6 +148,10 @@ namespace wozware.StackerDeluxe
 			Vector3 origPos = _noticePanel.anchoredPosition;
 			_noticePanelOriginalPos = origPos;
 			_noticePanelDestPos = new Vector3(origPos.x, _noticePanel.anchoredPosition.y - NoticePanelMoveDistance, origPos.z);
+			_creditsTransform = _creditsText.GetComponent<RectTransform>();
+			_creditsOriginalPos = _creditsTransform.anchoredPosition;
+			_currCreditIndex = 0;
+			_creditsText.SetText(_credits[_currCreditIndex]);
 		}
 
 		private void Update()
@@ -149,6 +182,23 @@ namespace wozware.StackerDeluxe
 			OnFadedIn -= ExitMainMenu;
 		}
 
+		public void UpdateMenuCredits()
+		{
+			_creditsTransform.anchoredPosition += new Vector2(0, _creditsFloatSpeed * Time.deltaTime);
+
+			if(_creditsText.FlickerCount >= _creditsFlickerLimit)
+			{
+				_currCreditIndex++;
+				if(_currCreditIndex >= _credits.Count)
+				{
+					_currCreditIndex = 0;
+				}
+				_creditsTransform.anchoredPosition = _creditsOriginalPos;
+				_creditsText.FlickerCount = 0;
+				_creditsText.SetText(_credits[_currCreditIndex]);
+			}
+		}
+
 		#endregion Menu
 
 		#region Game
@@ -162,6 +212,9 @@ namespace wozware.StackerDeluxe
 
 		public void ExitGame()
 		{
+			_timeParent.gameObject.SetActive(false);
+			_noticePanel.gameObject.SetActive(false);
+			_finishParent.gameObject.SetActive(false);
 			_gameOverParent.SetActive(false);
 		}
 
@@ -170,6 +223,29 @@ namespace wozware.StackerDeluxe
 			_gameParent.SetActive(true);
 			_getReadyParent.SetActive(true);
 			_countdownParent.SetActive(false);
+		}
+
+		public void EnterChallenger()
+		{
+			_challengerParent.SetActive(true);
+		}
+
+		public void ExitChallenger()
+		{
+			_challengerParent.SetActive(false);
+		}
+
+		public void EnterAchievements()
+		{
+			_achievementParent.SetActive(true);
+			OnFadedIn -= EnterAchievements;
+			StartFadeOut();
+		}
+
+		public void ExitAchievements()
+		{
+			_achievementParent.SetActive(false);
+			OnFadedIn -= ExitAchievements;
 		}
 
 		#endregion Game
@@ -204,7 +280,51 @@ namespace wozware.StackerDeluxe
 			_winParent.SetActive(true);
 		}
 
+		public void SetGameWinLabels(string levelName, string[] time, string[] recordTime, string misses, string perfects)
+		{
+			_finishLevelTitleText.SetText(levelName);
+
+			string m = time[0][0].ToString() + time[0][1].ToString();
+			string s = time[1][0].ToString() + time[1][1].ToString();
+			string ms = time[2][0].ToString() + time[2][1].ToString();
+
+			string rm = recordTime[0][0].ToString() + recordTime[0][1].ToString();
+			string rs = recordTime[1][0].ToString() + recordTime[1][1].ToString();
+			string rms = recordTime[2][0].ToString() + recordTime[2][1].ToString();
+
+			_finishLevelTimeText.SetText($"{m}:{s}:{ms}");
+			_finishLevelMissesText.SetText(misses);
+			_finishLevelPerfectsText.SetText(perfects);
+			_finishLevelRecordTimeText.SetText($"{rm}:{rs}:{rms}");
+		}
+
+		public void ShowNewRecordLabel(bool show)
+		{
+			_finishNewRecordLabel.gameObject.SetActive(show);
+		}
+
+		public void ShowPerfectScoreLabel(bool show)
+		{
+			_finishPerfectScoreLabel.gameObject.SetActive(show);
+		}
+
 		#endregion Game Win
+
+		#region Game Paused
+
+		public void EnterGamePaused()
+		{
+			StartFadeOut();
+			_pauseParent.SetActive(true);
+		}
+
+		public void ExitGamePaused()
+		{
+			_pauseParent.SetActive(false);
+			OnFadedIn -= ExitSettings;
+		}
+
+		#endregion
 
 		#region Settings
 

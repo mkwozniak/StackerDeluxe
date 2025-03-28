@@ -29,6 +29,23 @@ namespace wozware.StackerDeluxe
 	}
 
 	[System.Serializable]
+	public struct LevelRecord
+	{
+		public string Name;
+		public float TimeLeft;
+		public int Perfects;
+		public int Misses;
+
+		public LevelRecord(string name, float timeLeft, int perfects, int misses)
+		{
+			Name = name;
+			TimeLeft = timeLeft;	
+			Perfects = perfects;
+			Misses = misses;
+		}
+	}
+
+	[System.Serializable]
 	public sealed class SaveData
 	{
 		public float MusicVolume;
@@ -41,6 +58,7 @@ namespace wozware.StackerDeluxe
 		public uint RefreshRateDenom;
 		public FullScreenMode ScreenMode;
 		public float BloomIntensity;
+		public List<LevelRecord> LevelRecords;
 	}
 
 	public enum LogTypes
@@ -58,6 +76,7 @@ namespace wozware.StackerDeluxe
 		GameOver,
 		GameWin,
 		GamePaused,
+		Challenger,
 	}
 
 	public enum LevelDifficulties
@@ -86,6 +105,7 @@ namespace wozware.StackerDeluxe
 		VFX_GameOver,
 		VFX_GameWin,
 		VFX_NewRecord,
+		MusicChallenger,
 	}
 
 	public enum OneShotIDs
@@ -124,7 +144,12 @@ namespace wozware.StackerDeluxe
 			_standardLevels[LevelDifficulties.Expert] = _levelExpert;
 			_standardLevels[LevelDifficulties.Debug] = _levelDebug;
 
-			for(int i = 0; i < _levelsChallenger.Count; i++)
+			RecordKeeper.LVL_RECORDS.Add(_levelNormal.Name, new LevelRecord(_levelNormal.Name, 0, 0, 0));
+			RecordKeeper.LVL_RECORDS.Add(_levelHard.Name, new LevelRecord(_levelHard.Name, 0, 0, 0));
+			RecordKeeper.LVL_RECORDS.Add(_levelExpert.Name, new LevelRecord(_levelExpert.Name, 0, 0, 0));
+			RecordKeeper.LVL_RECORDS.Add(_levelDebug.Name, new LevelRecord(_levelDebug.Name, 0, 0, 0));
+
+			for (int i = 0; i < _levelsChallenger.Count; i++)
 			{
 				_challengerLevels[i] = _levelsChallenger[i];
 			}

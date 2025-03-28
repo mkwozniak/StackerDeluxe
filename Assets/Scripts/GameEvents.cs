@@ -20,7 +20,7 @@ namespace wozware.StackerDeluxe
 		public static Action DoContinueStackerSpawn;
 		public static Action DoSaveToSaveFile;
 
-		// Global Events
+		// Global Events //
 
 		private void LinkGameEvents()
 		{
@@ -37,6 +37,7 @@ namespace wozware.StackerDeluxe
 			_gameUpdates[GameStates.GameActive] = UpdateGameActive;
 			_gameUpdates[GameStates.GameOver] = UpdateGameOver;
 			_gameUpdates[GameStates.GameWin] = UpdateGameWin;
+			_gameUpdates[GameStates.GamePaused] = UpdateGamePaused;
 		}
 
 		/// <summary>
@@ -44,8 +45,8 @@ namespace wozware.StackerDeluxe
 		/// </summary>
 		private void LinkUIEvents()
 		{
-			// in editor events work fine
-			// but linking events through script allows for easier management and finer control
+			// linking UI events through script is currently my preference //
+			// as opposed to unity inspector //
 
 			// normal difficulty button //
 
@@ -85,6 +86,34 @@ namespace wozware.StackerDeluxe
 			});
 
 			// expert difficulty button //
+
+			// challenger button //
+
+			_ui.ChallengerBtn.RootButton.onClick.AddListener(() => {
+				EnterChallengerWorld();
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.ChallengerBtn.OnHoverEvent.AddListener(() =>
+			{
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// challenger button //
+
+			// challenger exit button //
+
+			_ui.ChallengerExitBtn.RootButton.onClick.AddListener(() => {
+				ExitChallengerWorld();
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.ChallengerExitBtn.OnHoverEvent.AddListener(() =>
+			{
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// challenger exit button //
 
 			// gameover restart button //
 
@@ -154,6 +183,40 @@ namespace wozware.StackerDeluxe
 
 			// win exit button //
 
+			// achievements button //
+
+			_ui.AchievementsBtn.RootButton.onClick.AddListener(() => {
+
+				_ui.StartFadeIn();
+				_ui.OnFadedIn += _ui.EnterAchievements;
+				_ui.OnFadedIn += _ui.ExitMainMenu;
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.AchievementsBtn.OnHoverEvent.AddListener(() =>
+			{
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// achievements button //
+
+			// achievements exit button //
+
+			_ui.AchievementsExitBtn.RootButton.onClick.AddListener(() => {
+
+				_ui.StartFadeIn();
+				_ui.OnFadedIn += _ui.ExitAchievements;
+				_ui.OnFadedIn += _ui.EnterMainMenu;
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.AchievementsExitBtn.OnHoverEvent.AddListener(() =>
+			{
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// achievements exit button //
+
 			// menu settings enter button //
 
 			_ui.SettingsBtn_Menu.RootButton.onClick.AddListener(() => {
@@ -182,6 +245,13 @@ namespace wozware.StackerDeluxe
 				if(_toSettingsState == GameStates.MainMenu)
 				{
 					_ui.OnFadedIn += _ui.EnterMainMenu;
+				}
+
+				if(_toSettingsState == GameStates.GamePaused)
+				{
+					_ui.OnFadedIn += _ui.EnterGamePaused;
+					_ui.OnFadedIn += MoveCameraBackToStackerRow;
+					_inSettingsFromPause = false;
 				}
 
 				CreateSFX(SoundIDs.ButtonClick, 0);
@@ -312,6 +382,60 @@ namespace wozware.StackerDeluxe
 			});
 
 			// bloom slider //
+
+
+			// pause resume btn //
+
+			_ui.Pause_ResumeBtn.RootButton.onClick.AddListener(() => {
+
+				ExitPause(toExit: false);
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.Pause_ResumeBtn.OnHoverEvent.AddListener(() =>
+			{
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// pause resume btn //
+
+			// pause settings btn //
+
+			_ui.Pause_SettingsBtn.RootButton.onClick.AddListener(() => {
+
+				_ui.StartFadeIn();
+				_ui.OnFadedIn += _ui.EnterSettings;
+				_ui.OnFadedIn += _ui.ExitGamePaused;
+				_ui.OnFadedIn += MoveCameraToEmptyPoint;
+				_toSettingsState = GameStates.GamePaused;
+				_inSettingsFromPause = true;
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.Pause_SettingsBtn.OnHoverEvent.AddListener(() =>
+			{
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// pause settings btn //
+
+
+			// pause exit btn //
+
+			_ui.Pause_ExitBtn.RootButton.onClick.AddListener(() => {
+
+				ExitPause(toExit: true);
+				_currStackerRow.Pause(true);
+				TriggerGameOver();
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.Pause_ExitBtn.OnHoverEvent.AddListener(() =>
+			{
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// pause exit btn //
 		}
 	}
 }

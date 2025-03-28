@@ -26,7 +26,10 @@ namespace wozware.StackerDeluxe
 		[SerializeField] bool _startInvisible;
 
 		bool _validText;
+		int _flickerCount;
 		[SerializeField] Material _fontMaterial = null;
+
+		public int FlickerCount { get { return _flickerCount; } set { _flickerCount = value; } }
 
 		private void Awake()
 		{
@@ -89,6 +92,7 @@ namespace wozware.StackerDeluxe
 				if (_currGlowFlickerPower <= 0)
 				{
 					_flickerState = true;
+					_flickerCount++;
 				}
 			}
 

@@ -143,6 +143,11 @@ namespace wozware.StackerDeluxe
 			Game.DoContinueStackerSpawn();
 		}
 
+		public void Pause(bool pause)
+		{
+			_active = !pause;
+		}
+
 		public void DestroySelf()
 		{
 			for (int i = 0; i < transform.childCount; i++)

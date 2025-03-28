@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5172ab0f80bfe264e8089793b19875a7, type: 3}
   m_Name: Normal
   m_EditorClassIdentifier: 
-  Name: Test
+  Name: Normal
   StartingThickness: 3
   RowList:
   - Thickness: 3
