@@ -43,6 +43,7 @@ namespace wozware.StackerDeluxe
 		[SerializeField] MeshRenderer _gridRenderer;
 		[SerializeField] Material _skybox0;
 		[SerializeField] Material _skybox1;
+		[SerializeField] Material _skybox2;
 		[SerializeField] Material _defaultGridMaterial;
 		[SerializeField] Material _loseGridMaterial;
 
@@ -50,6 +51,7 @@ namespace wozware.StackerDeluxe
 		[SerializeField] GameStates _gameState;
 		[SerializeField] StackerLevel _currLevel;
 		[SerializeField] StackerRow _currStackerRow;
+		[SerializeField] LevelDifficulties _currDifficulty;
 		[SerializeField] bool _inCountdown = false;
 		[SerializeField] bool _canPlaceStacker = false;
 		[SerializeField] float _currCountdown = 3f;
@@ -109,6 +111,12 @@ namespace wozware.StackerDeluxe
 			// link ui events
 			LinkUIEvents();
 
+			// populate achievements
+			InitializeAchievements(LevelDifficulties.Debug);
+			InitializeAchievements(LevelDifficulties.Normal);
+			InitializeAchievements(LevelDifficulties.Hard);
+			InitializeAchievements(LevelDifficulties.Expert);
+
 			_stageParent.SetActive(false);
 		}
 
@@ -160,6 +168,7 @@ namespace wozware.StackerDeluxe
 				// set default save data
 				data.MusicVolume = 1f;
 				data.SFXVolume = 1f;
+				data.ShortCountdown = false;
 
 				UI.CURRENT_RESOLUTION = Screen.currentResolution;
 				UI.CURRENT_SCREEN_MODE = Screen.fullScreenMode;
@@ -244,7 +253,6 @@ namespace wozware.StackerDeluxe
 
 		private void EnterMenuMode()
 		{
-			_ui.OnFadedOut += FinishMenuMode;
 			_ui.OnFadedIn -= EnterMenuMode;
 			_ui.EnterMainMenu();
 			_gameState = GameStates.MainMenu;
@@ -254,9 +262,52 @@ namespace wozware.StackerDeluxe
 			_ui.StartFadeOut();
 		}
 
-		private void FinishMenuMode()
+		private void EnterSettingsMode()
 		{
-			_ui.OnFadedOut -= FinishMenuMode;
+			_ui.OnFadedIn -= EnterSettingsMode;
+			RenderSettings.skybox = _skybox2;
+		}
+
+		private void SetMenuSkybox()
+		{
+			_ui.OnFadedIn -= SetMenuSkybox;
+			RenderSettings.skybox = _skybox0;
+		}
+
+		private void InitializeAchievements(LevelDifficulties difficulty)
+		{
+			StackerLevel lvl = null;
+			bool hasLevel = _gameData.TryGetStandardStackerLevel(difficulty, ref lvl);
+			if(!hasLevel)
+			{
+				Debug.LogError($"Cannot Initialize Achievements for {difficulty}. Level does not exist.");
+				return;
+			}
+
+			if (lvl.Achievements.Count > RecordKeeper.LVL_RECORDS[lvl.Name].Achievements.Count)
+			{
+				for (int i = RecordKeeper.LVL_RECORDS[lvl.Name].Achievements.Count;
+					i < lvl.Achievements.Count; i++)
+				{
+					RecordKeeper.LVL_RECORDS[lvl.Name].Achievements.Add(lvl.Achievements[i]);
+				}
+			}
+
+			_ui.PopulateAchievements(lvl.Name);
+		}
+
+		private void SetAchievementSkybox()
+		{
+			_ui.OnFadedIn -= SetAchievementSkybox;
+			RenderSettings.skybox = _skybox2;
+		}
+
+		private void EnterAchievementWinMode()
+		{
+			_ui.OnFadedIn -= EnterAchievementWinMode;
+			_ui.CurrentAchievementWinIndex = 0;
+			_ui.DestroyWinAchievements();
+			StartCoroutine(_ui.PopulateWinAchievements(_currLevel.Name));
 		}
 
 		#endregion Menu
@@ -327,7 +378,6 @@ namespace wozware.StackerDeluxe
 			_ui.StartFadeIn();
 			_ui.OnFadedIn += EnterPregameMode;
 			_ui.OnFadedIn += _ui.ExitMainMenu;
-			CreateSFX(SoundIDs.ButtonClick, 0);
 		}
 
 		private void EnterChallengerWorld()
@@ -442,6 +492,7 @@ namespace wozware.StackerDeluxe
 			if (timeout)
 			{
 				_currStackerRow.Active = false;
+				_ui.ShowTimeout();
 				CreateSFX(SoundIDs.VFX_Timeout);
 				return;
 			}
@@ -465,38 +516,16 @@ namespace wozware.StackerDeluxe
 			ExitWinMode();
 			_ui.ExitGamePaused();
 			_ui.StartFadeOut();
-			RenderSettings.skybox = _skybox0;
+			RenderSettings.skybox = _skybox2;
 			_ui.EnterGameWin();
 
 			_ui.SetGameWinLabels(_currLevel.Name, GetTimeStrings(_currTimeLeft), 
 				GetTimeStrings(RecordKeeper.LVL_RECORDS[_currLevel.Name].TimeLeft),
 				RecordKeeper.MISSED.ToString(), RecordKeeper.PERFECTS.ToString());
 
-			float timeRecord = RecordKeeper.LVL_RECORDS[_currLevel.Name].TimeLeft;
-			if (_currTimeLeft > timeRecord)
-			{
-				timeRecord = _currTimeLeft;
-				CreateSFX(SoundIDs.VFX_NewRecord);
-				_ui.ShowNewRecordLabel(true);
-			}
+			UpdateWinRecords();
 
-			if(RecordKeeper.MISSED <= 0)
-			{
-				_ui.ShowPerfectScoreLabel(true);
-			}
-
-			RecordKeeper.LVL_RECORDS[_currLevel.Name] = 
-				new LevelRecord(_currLevel.Name, timeRecord, 
-				RecordKeeper.MISSED, RecordKeeper.PERFECTS);
-
-			for(int i = 0; i < _saveData.LevelRecords.Count; i++)
-			{
-				if(_currLevel.name == _saveData.LevelRecords[i].Name)
-				{
-					_saveData.LevelRecords[i] = RecordKeeper.LVL_RECORDS[_currLevel.Name];
-					break;
-				}
-			}
+			SaveToSaveFile();
 		}
 
 		private void ExitWinMode()
@@ -515,6 +544,84 @@ namespace wozware.StackerDeluxe
 			_finalGameWinTimer = 0f;
 			SetMusic(SoundIDs.MusicWin);
 			CreateSFX(SoundIDs.VFX_GameWin);
+		}
+
+		private void UpdateWinRecords()
+		{
+			float timeRecord = RecordKeeper.LVL_RECORDS[_currLevel.Name].TimeLeft;
+			if (_currTimeLeft > timeRecord)
+			{
+				timeRecord = _currTimeLeft;
+				CreateSFX(SoundIDs.VFX_NewRecord);
+				_ui.ShowNewRecordLabel(true);
+			}
+
+			if (RecordKeeper.MISSED <= 0)
+			{
+				_ui.ShowPerfectScoreLabel(true);
+			}
+
+			for (int i = 0; i < _saveData.LevelRecords.Count; i++)
+			{
+				if (_currLevel.Name == _saveData.LevelRecords[i].Name)
+				{
+					UpdateWinAchievements(i, timeRecord);
+					Debug.Log($"Saving Record Data from RecordKeeper: {_currLevel.Name}");
+					break;
+				}
+			}
+		}
+
+		private void UpdateWinAchievements(int index, float timeRecord)
+		{
+			List<Achievement> list = RecordKeeper.LVL_RECORDS[_currLevel.Name].Achievements;
+
+			for (int i = 0; i < list.Count; i++)
+			{
+				Achievement a = list[i];
+				Debug.Log(RecordKeeper.LVL_RECORDS[_currLevel.Name].Achievements[i].Complete);
+				if (RecordKeeper.LVL_RECORDS[_currLevel.Name].Achievements[i].Complete)
+					continue;
+
+				bool complete = false;
+
+				if (a.AchievementType == AchievementTypes.Time)
+				{
+					if(a.TimeThreshold <= _currTimeLeft)
+					{
+						a.Complete = true;
+						complete = true;
+					}
+				}
+
+				if(a.AchievementType == AchievementTypes.Clear)
+				{
+					a.Complete = true;
+					complete = true;
+				}
+
+				if(a.AchievementType == AchievementTypes.Perfect)
+				{
+					if (RecordKeeper.MISSED <= 0)
+					{
+						a.Complete = true;
+						complete = true;
+					}
+				}
+
+				if(complete)
+				{
+					list[i] = new Achievement(list[i].Name, list[i].Description, list[i].AchievementType, list[i].TimeThreshold, true);
+					_ui.UIAchievements[a.Description].DoneObject.SetActive(true);
+					_ui.NumCompletedAchievements += 1;
+				}
+			}
+
+			RecordKeeper.LVL_RECORDS[_currLevel.Name] =
+				new LevelRecord(_currLevel.Name, timeRecord,
+				RecordKeeper.MISSED, RecordKeeper.PERFECTS, list);
+
+			_saveData.LevelRecords[index] = RecordKeeper.LVL_RECORDS[_currLevel.Name];
 		}
 
 		#endregion Game Win
@@ -857,7 +964,7 @@ namespace wozware.StackerDeluxe
 		private void EnableCountdown(bool enable)
 		{
 			_inCountdown = enable;
-			_currCountdown = 4f;
+			_currCountdown = _saveData.ShortCountdown ? 1f : 4f;
 			_currCountdownInterval = 4.0f;
 			_ui.EnableCountdown(enable);
 			if (enable)

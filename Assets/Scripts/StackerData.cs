@@ -35,13 +35,34 @@ namespace wozware.StackerDeluxe
 		public float TimeLeft;
 		public int Perfects;
 		public int Misses;
+		public List<Achievement> Achievements;
 
-		public LevelRecord(string name, float timeLeft, int perfects, int misses)
+		public LevelRecord(string name, float timeLeft, int perfects, int misses, List<Achievement> achievements)
 		{
 			Name = name;
 			TimeLeft = timeLeft;	
 			Perfects = perfects;
 			Misses = misses;
+			Achievements = new List<Achievement>(achievements);
+		}
+	}
+
+	[System.Serializable]
+	public struct Achievement
+	{
+		public string Name;
+		[Multiline] public string Description;
+		public AchievementTypes AchievementType;
+		public float TimeThreshold;
+		public bool Complete;
+
+		public Achievement(string name, string description, AchievementTypes t, float threshold, bool complete)
+		{
+			Name = name;
+			Description = description;
+			AchievementType = t;
+			TimeThreshold = threshold;
+			Complete = complete;
 		}
 	}
 
@@ -52,6 +73,7 @@ namespace wozware.StackerDeluxe
 		public float SFXVolume;
 		public bool MusicMuted;
 		public bool SFXMuted;
+		public bool ShortCountdown;
 		public int ResolutionWidth;
 		public int ResolutionHeight;
 		public uint RefreshRate;
@@ -106,6 +128,7 @@ namespace wozware.StackerDeluxe
 		VFX_GameWin,
 		VFX_NewRecord,
 		MusicChallenger,
+		VFX_AchievementGain,
 	}
 
 	public enum OneShotIDs
@@ -118,6 +141,13 @@ namespace wozware.StackerDeluxe
 		Arpeggio,
 		OneShot,
 		Off,
+	}
+
+	public enum AchievementTypes
+	{
+		Clear,
+		Time,
+		Perfect,
 	}
 
 	[CreateAssetMenu(fileName = "StackerData", menuName = "StackerDeluxe/StackerData", order = 2)]
@@ -144,10 +174,14 @@ namespace wozware.StackerDeluxe
 			_standardLevels[LevelDifficulties.Expert] = _levelExpert;
 			_standardLevels[LevelDifficulties.Debug] = _levelDebug;
 
-			RecordKeeper.LVL_RECORDS.Add(_levelNormal.Name, new LevelRecord(_levelNormal.Name, 0, 0, 0));
-			RecordKeeper.LVL_RECORDS.Add(_levelHard.Name, new LevelRecord(_levelHard.Name, 0, 0, 0));
-			RecordKeeper.LVL_RECORDS.Add(_levelExpert.Name, new LevelRecord(_levelExpert.Name, 0, 0, 0));
-			RecordKeeper.LVL_RECORDS.Add(_levelDebug.Name, new LevelRecord(_levelDebug.Name, 0, 0, 0));
+			RecordKeeper.LVL_RECORDS.Add(_levelNormal.Name, 
+				new LevelRecord(_levelNormal.Name, 0, 0, 0, _levelNormal.Achievements));
+			RecordKeeper.LVL_RECORDS.Add(_levelHard.Name,
+				new LevelRecord(_levelHard.Name, 0, 0, 0, _levelHard.Achievements));
+			RecordKeeper.LVL_RECORDS.Add(_levelExpert.Name, 
+				new LevelRecord(_levelExpert.Name, 0, 0, 0, _levelExpert.Achievements));
+			RecordKeeper.LVL_RECORDS.Add(_levelDebug.Name, 
+				new LevelRecord(_levelDebug.Name, 0, 0, 0, _levelDebug.Achievements));
 
 			for (int i = 0; i < _levelsChallenger.Count; i++)
 			{

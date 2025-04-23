@@ -6,6 +6,7 @@ using Image = UnityEngine.UI.Image;
 using Slider = UnityEngine.UI.Slider;
 using Toggle = UnityEngine.UI.Toggle;
 using Dropdown = TMPro.TMP_Dropdown;
+using System.Collections;
 
 namespace wozware.StackerDeluxe
 {
@@ -24,6 +25,7 @@ namespace wozware.StackerDeluxe
 		public float NoticePanelSpeed;
 		public float NoticePanelMoveDistance;
 		public float NoticePanelLingerTime;
+		public float WinAchievementsDelay;
 
 		[Header("References")]
 		public ButtonVisualModifier DifficultyBtn_Normal;
@@ -33,6 +35,7 @@ namespace wozware.StackerDeluxe
 		public ButtonVisualModifier ExitBtn_GameOver;
 		public ButtonVisualModifier RestartBtn_Win;
 		public ButtonVisualModifier ExitBtn_Win;
+		public ButtonVisualModifier ContinueBtn_Win;
 		public ButtonVisualModifier SettingsBtn_Menu;
 		public ButtonVisualModifier ExitSettingsBtn;
 		public ButtonVisualModifier ApplySettingsBtn;
@@ -43,6 +46,8 @@ namespace wozware.StackerDeluxe
 		public ButtonVisualModifier Pause_ExitBtn;
 		public ButtonVisualModifier AchievementsBtn;
 		public ButtonVisualModifier AchievementsExitBtn;
+		public ButtonVisualModifier LevelStartBtn;
+		public ButtonVisualModifier LevelCancelBtn;
 
 		public Slider Slider_MusicVolume;
 		public Slider Slider_SFXVolume;
@@ -50,6 +55,7 @@ namespace wozware.StackerDeluxe
 
 		public Toggle Toggle_MusicMute;
 		public Toggle Toggle_SFXMuted;
+		public Toggle Toggle_ShortCountdown;
 
 		public Dropdown Dropdown_Resolutions;
 		public Dropdown Dropdown_ScreenMode;
@@ -57,8 +63,17 @@ namespace wozware.StackerDeluxe
 		public UnityEngine.Rendering.Volume PPVolume;
 		public float BloomIntensityMax = 0.5f;
 
+		public Dictionary<string, UIAchievement> UIAchievements = new();
+
+		public CustomTextProperties MusicMuteToggleText { get { return _musicMuteText; } }
+		public CustomTextProperties SFXMuteToggleText { get { return _sfxMuteText; } }
+		public CustomTextProperties ShortCountdownToggleText { get { return _shortCountdownText; } }
+		public int NumCompletedAchievements { get { return _completedAchievements; } set { _completedAchievements = value; } }
+		public int CurrentAchievementWinIndex { set { _currAchievementWinIndex = value; } }
+
 		[SerializeField] Image _fadeScreen;
 		[SerializeField] CanvasText _timeEntryPrefab;
+		[SerializeField] UIAchievement _achievementPrefab;
 
 		[Header("UI Parents")]
 		[SerializeField] GameObject _menuParent;
@@ -75,6 +90,11 @@ namespace wozware.StackerDeluxe
 		[SerializeField] GameObject _challengerParent;
 		[SerializeField] GameObject _pauseParent;
 		[SerializeField] GameObject _achievementParent;
+		[SerializeField] GameObject _timeoutParent;
+		[SerializeField] GameObject _pregameParent;
+		[SerializeField] RectTransform _achievementContentParent;
+		[SerializeField] GameObject _winAchievementParent;
+		[SerializeField] RectTransform _achievementWinContentParent;
 
 		[Header("Time Panel")]
 		[SerializeField] CanvasText _timeTextMin_D0;
@@ -90,6 +110,7 @@ namespace wozware.StackerDeluxe
 		[SerializeField] CustomTextProperties _timeGainText_Unit;
 		[SerializeField] Color _timeGainAddColor;
 		[SerializeField] Color _timeGainLoseColor;
+		[SerializeField] Color _greyedColor;
 		[ColorUsage(true, true), SerializeField] Color _timeGainAddGlowColor;
 		[ColorUsage(true, true), SerializeField] Color _timeGainLoseGlowColor;
 
@@ -97,6 +118,7 @@ namespace wozware.StackerDeluxe
 		[SerializeField] CustomTextProperties _settingsAppliedText;
 		[SerializeField] CustomTextProperties _musicMuteText;
 		[SerializeField] CustomTextProperties _sfxMuteText;
+		[SerializeField] CustomTextProperties _shortCountdownText;
 
 		[Header("Notice Panel")]
 		[SerializeField] CustomTextProperties _noticePanelTextProps;
@@ -117,12 +139,14 @@ namespace wozware.StackerDeluxe
 		[SerializeField] CustomTextProperties _finishLevelRecordTimeText;
 		[SerializeField] CustomTextProperties _finishNewRecordLabel;
 		[SerializeField] CustomTextProperties _finishPerfectScoreLabel;
+		[SerializeField] CustomTextProperties _achievementNumberText;
 
 		[Header("States")]
 		[SerializeField] float _currFadeLerp = 0f;
-		[SerializeField] bool _isFading = false;
 		[SerializeField] byte _fadeScreenState = 0;
 		[SerializeField][Multiline] List<string> _credits;
+		[SerializeField] int _numAchievements;
+		[SerializeField] int _completedAchievements;
 
 		// local members //
 
@@ -138,6 +162,7 @@ namespace wozware.StackerDeluxe
 		int _currCreditIndex = 0;
 		RectTransform _creditsTransform;
 		Vector2 _creditsOriginalPos;
+		int _currAchievementWinIndex = 0;
 
 		// local members //
 
@@ -179,6 +204,7 @@ namespace wozware.StackerDeluxe
 		public void ExitMainMenu()
 		{
 			_menuParent.SetActive(false);
+			ShowPregame(false);
 			OnFadedIn -= ExitMainMenu;
 		}
 
@@ -197,6 +223,69 @@ namespace wozware.StackerDeluxe
 				_creditsText.FlickerCount = 0;
 				_creditsText.SetText(_credits[_currCreditIndex]);
 			}
+		}
+
+		public void ShowPregame(bool val)
+		{
+			_pregameParent.SetActive(val);
+		}
+
+		public void PopulateAchievements(string name)
+		{
+			LevelRecord record = RecordKeeper.LVL_RECORDS[name];
+			for (int i = 0; i < record.Achievements.Count; i++)
+			{
+				UIAchievement g = Instantiate(_achievementPrefab, _achievementContentParent);
+
+				g.Description.SetText(record.Achievements[i].Description);
+
+				UIAchievements[record.Achievements[i].Description] = g;
+
+				_numAchievements += 1;
+				if (record.Achievements[i].Complete)
+				{
+					g.DoneObject.SetActive(true);
+					NumCompletedAchievements += 1;
+				}
+			}
+		}
+
+		public void DestroyWinAchievements()
+		{
+			int i = 0;
+			while (i < _achievementWinContentParent.childCount)
+			{
+				Destroy(_achievementWinContentParent.GetChild(i).gameObject);
+				i++;
+			}
+		}
+
+		public IEnumerator PopulateWinAchievements(string name)
+		{
+			LevelRecord record = RecordKeeper.LVL_RECORDS[name];
+			int numRecords = record.Achievements.Count;
+
+			int i = _currAchievementWinIndex;
+			if (_currAchievementWinIndex < numRecords)
+			{
+				yield return new WaitForSeconds(WinAchievementsDelay);
+				UIAchievement g = Instantiate(_achievementPrefab, _achievementWinContentParent);
+
+				g.Description.SetText(record.Achievements[i].Description);
+
+				UIAchievements[record.Achievements[i].Description] = g;
+
+				if (record.Achievements[i].Complete)
+				{
+					g.DoneObject.SetActive(true);
+					Game.DoCreateSFX(SoundIDs.VFX_AchievementGain, 0f);
+				}
+
+				_currAchievementWinIndex++;
+				StartCoroutine(PopulateWinAchievements(name));
+			}
+
+			yield return null;
 		}
 
 		#endregion Menu
@@ -238,6 +327,7 @@ namespace wozware.StackerDeluxe
 		public void EnterAchievements()
 		{
 			_achievementParent.SetActive(true);
+			_achievementNumberText.SetText($"{_completedAchievements} / {_numAchievements} COMPLETED");
 			OnFadedIn -= EnterAchievements;
 			StartFadeOut();
 		}
@@ -256,6 +346,7 @@ namespace wozware.StackerDeluxe
 		{
 			_gameOverParent.SetActive(true);
 			_finishParent.SetActive(false);
+			_timeoutParent.SetActive(false);
 		}
 
 		public void ExitGameOver()
@@ -269,15 +360,29 @@ namespace wozware.StackerDeluxe
 
 		#region Game Win
 
+		public void EnterGameWin()
+		{
+			_winParent.SetActive(true);
+		}
+
 		public void ExitGameWin()
 		{
 			OnFadedOut -= ExitGameWin;
 			_winParent.SetActive(false);
 			_finishParent.SetActive(false);
 		}
-		public void EnterGameWin()
+
+		public void EnterGameAchievementWin()
 		{
-			_winParent.SetActive(true);
+			OnFadedIn -= EnterGameAchievementWin;
+			_winAchievementParent.SetActive(true);
+			StartFadeOut();
+		}
+
+		public void ExitGameAchievementWin()
+		{
+			OnFadedIn -= EnterGameAchievementWin;
+			_winAchievementParent.SetActive(false);
 		}
 
 		public void SetGameWinLabels(string levelName, string[] time, string[] recordTime, string misses, string perfects)
@@ -316,6 +421,7 @@ namespace wozware.StackerDeluxe
 		{
 			StartFadeOut();
 			_pauseParent.SetActive(true);
+			OnFadedIn -= EnterGamePaused;
 		}
 
 		public void ExitGamePaused()
@@ -336,15 +442,12 @@ namespace wozware.StackerDeluxe
 			Slider_SFXVolume.value = data.SFXVolume;
 			Toggle_MusicMute.isOn = data.MusicMuted;
 			Toggle_SFXMuted.isOn = data.SFXMuted;
+			Toggle_ShortCountdown.isOn = data.ShortCountdown;
 
-			Color mc1 = data.MusicMuted ? _timeGainLoseColor : _timeGainAddColor;
-			Color mc2 = data.MusicMuted ? _timeGainLoseGlowColor : _timeGainAddGlowColor;
-			_musicMuteText.SetColor(mc1, mc2);
+			UpdateToggleVisual(_musicMuteText, data.MusicMuted);
+			UpdateToggleVisual(_sfxMuteText, data.SFXMuted);
+			UpdateToggleVisualGreyed(_shortCountdownText, data.ShortCountdown);
 
-			Color sc1 = data.SFXMuted ? _timeGainLoseColor : _timeGainAddColor;
-			Color sc2 = data.SFXMuted ? _timeGainLoseGlowColor : _timeGainAddGlowColor;
-			_sfxMuteText.SetColor(sc1, sc2);
-			
 			int selectedRes = 0;
 			for(int i = 0; i < RESOLUTIONS.Length; i++)
 			{
@@ -390,18 +493,18 @@ namespace wozware.StackerDeluxe
 			_settingsAppliedText.EnableOneTimeGlowFlicker();
 		}
 
-		public void UpdateMusicMuteToggleVisual(bool mute)
+		public void UpdateToggleVisual(CustomTextProperties txt, bool mute)
 		{
 			Color mc1 = mute ? _timeGainLoseColor : _timeGainAddColor;
 			Color mc2 = mute ? _timeGainLoseGlowColor : _timeGainAddGlowColor;
-			_musicMuteText.SetColor(mc1, mc2);
+			txt.SetColor(mc1, mc2);
 		}
 
-		public void UpdateSFXMuteToggleVisual(bool mute)
+		public void UpdateToggleVisualGreyed(CustomTextProperties txt, bool mute)
 		{
-			Color mc1 = mute ? _timeGainLoseColor : _timeGainAddColor;
-			Color mc2 = mute ? _timeGainLoseGlowColor : _timeGainAddGlowColor;
-			_sfxMuteText.SetColor(mc1, mc2);
+			Color mc1 = mute ? _timeGainAddColor : _greyedColor;
+			Color mc2 = mute ? _timeGainAddGlowColor : _greyedColor;
+			txt.SetColor(mc1, mc2);
 		}
 
 		#endregion
@@ -608,6 +711,11 @@ namespace wozware.StackerDeluxe
 			_finishTextProps.SetText(msg);
 			_finishParent.SetActive(true);
 			_finishParentBorder.color = c;
+		}
+
+		public void ShowTimeout()
+		{
+			_timeoutParent.SetActive(true);
 		}
 
 		public void GenerateResolutions()

@@ -21,6 +21,7 @@ namespace wozware.StackerDeluxe
 		public int StartingThickness;
 		public List<StackerLevelRow> RowList;
 		public float TimeLeft;
+		public List<Achievement> Achievements;
 
 		public Dictionary<int, StackerLevelRow> Rows = new();
 

@@ -76,3 +76,24 @@ MonoBehaviour:
     SecondsGain: 1
     MusicLoop: {fileID: 8300000, guid: 75fa32ec479f1e64fba0fec5ffe3542f, type: 3}
   TimeLeft: 30
+  Achievements:
+  - Name: Normal
+    Description: CLEAR NORMAL DIFFICULTY
+    AchievementType: 0
+    TimeThreshold: 0
+    Complete: 0
+  - Name: Normal
+    Description: ACHIEVE A PERFECT SCORE IN NORMAL DIFFICULTY
+    AchievementType: 2
+    TimeThreshold: 0
+    Complete: 0
+  - Name: Normal
+    Description: "CLEAR NORMAL DIFFICULTY \nWITH ATLEAST 20 SECONDS"
+    AchievementType: 1
+    TimeThreshold: 20
+    Complete: 0
+  - Name: Normal
+    Description: "CLEAR NORMAL DIFFICULTY \nWITH ATLEAST 30 SECONDS"
+    AchievementType: 1
+    TimeThreshold: 30
+    Complete: 0

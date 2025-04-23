@@ -70,6 +70,9 @@ MonoBehaviour:
   - ID: 16
     Clips:
     - {fileID: 8300000, guid: cdc1b7bef35ab814cb4af012682fcd3f, type: 3}
+  - ID: 17
+    Clips:
+    - {fileID: 8300000, guid: e39049c9812b93547b5096d68124acf9, type: 3}
   _oneShotList:
   - ID: 0
     Clips:

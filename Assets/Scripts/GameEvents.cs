@@ -51,7 +51,10 @@ namespace wozware.StackerDeluxe
 			// normal difficulty button //
 
 			_ui.DifficultyBtn_Normal.RootButton.onClick.AddListener(() => {
-				EnterGameAtDifficulty(LevelDifficulties.Debug);
+				_currDifficulty = LevelDifficulties.Normal;
+				CreateSFX(SoundIDs.ButtonClick, 0);
+				_ui.ExitMainMenu();
+				_ui.ShowPregame(true);
 			});
 
 			_ui.DifficultyBtn_Normal.OnHoverEvent.AddListener(() =>
@@ -64,7 +67,10 @@ namespace wozware.StackerDeluxe
 			// hard difficulty button //
 
 			_ui.DifficultyBtn_Hard.RootButton.onClick.AddListener(() => {
-				EnterGameAtDifficulty(LevelDifficulties.Hard);
+				_currDifficulty = LevelDifficulties.Hard;
+				CreateSFX(SoundIDs.ButtonClick, 0);
+				_ui.ExitMainMenu();
+				_ui.ShowPregame(true);
 			});
 
 			_ui.DifficultyBtn_Hard.OnHoverEvent.AddListener(() =>
@@ -77,7 +83,10 @@ namespace wozware.StackerDeluxe
 			// expert difficulty button //
 
 			_ui.DifficultyBtn_Expert.RootButton.onClick.AddListener(() => {
-				EnterGameAtDifficulty(LevelDifficulties.Expert);
+				_currDifficulty = LevelDifficulties.Expert;
+				CreateSFX(SoundIDs.ButtonClick, 0);
+				_ui.ExitMainMenu();
+				_ui.ShowPregame(true);
 			});
 
 			_ui.DifficultyBtn_Expert.OnHoverEvent.AddListener(() =>
@@ -115,6 +124,35 @@ namespace wozware.StackerDeluxe
 
 			// challenger exit button //
 
+			// level start button //
+
+			_ui.LevelStartBtn.RootButton.onClick.AddListener(() => {
+				EnterGameAtDifficulty(_currDifficulty);
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.LevelStartBtn.OnHoverEvent.AddListener(() =>
+			{
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// level start button //
+
+			// level cancel button //
+
+			_ui.LevelCancelBtn.RootButton.onClick.AddListener(() => {
+				_ui.ShowPregame(false);
+				_ui.EnterMainMenu();
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.LevelCancelBtn.OnHoverEvent.AddListener(() =>
+			{
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// level cancel button //
+
 			// gameover restart button //
 
 			_ui.RestartBtn_GameOver.RootButton.onClick.AddListener(() => {
@@ -149,13 +187,31 @@ namespace wozware.StackerDeluxe
 
 			// gameover exit button //
 
+			// win continue button //
+
+			_ui.ContinueBtn_Win.RootButton.onClick.AddListener(() => {
+
+				_ui.StartFadeIn();
+				_ui.OnFadedIn += EnterAchievementWinMode;
+				_ui.OnFadedIn += _ui.ExitGameWin;
+				_ui.OnFadedIn += _ui.EnterGameAchievementWin;
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.ContinueBtn_Win.OnHoverEvent.AddListener(() =>
+			{
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// win continue button //
+
 			// win restart button //
 
 			_ui.RestartBtn_Win.RootButton.onClick.AddListener(() => {
 
 				_ui.StartFadeIn();
 				_ui.OnFadedIn += EnterPregameMode;
-				_ui.OnFadedIn += _ui.ExitGameWin;
+				_ui.OnFadedIn += _ui.ExitGameAchievementWin;
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
@@ -172,7 +228,7 @@ namespace wozware.StackerDeluxe
 
 				_ui.StartFadeIn();
 				_ui.OnFadedIn += EnterMenuMode;
-				_ui.OnFadedIn += _ui.ExitGameWin;
+				_ui.OnFadedIn += _ui.ExitGameAchievementWin;
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
@@ -190,6 +246,7 @@ namespace wozware.StackerDeluxe
 				_ui.StartFadeIn();
 				_ui.OnFadedIn += _ui.EnterAchievements;
 				_ui.OnFadedIn += _ui.ExitMainMenu;
+				_ui.OnFadedIn += SetAchievementSkybox;
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
@@ -207,6 +264,7 @@ namespace wozware.StackerDeluxe
 				_ui.StartFadeIn();
 				_ui.OnFadedIn += _ui.ExitAchievements;
 				_ui.OnFadedIn += _ui.EnterMainMenu;
+				_ui.OnFadedIn += SetMenuSkybox;
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
@@ -224,6 +282,7 @@ namespace wozware.StackerDeluxe
 				_ui.StartFadeIn();
 				_ui.OnFadedIn += _ui.EnterSettings;
 				_ui.OnFadedIn += _ui.ExitMainMenu;
+				_ui.OnFadedIn += EnterSettingsMode;
 				_toSettingsState = GameStates.MainMenu;
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
@@ -245,6 +304,7 @@ namespace wozware.StackerDeluxe
 				if(_toSettingsState == GameStates.MainMenu)
 				{
 					_ui.OnFadedIn += _ui.EnterMainMenu;
+					_ui.OnFadedIn += SetMenuSkybox;
 				}
 
 				if(_toSettingsState == GameStates.GamePaused)
@@ -304,7 +364,7 @@ namespace wozware.StackerDeluxe
 			_ui.Toggle_MusicMute.onValueChanged.AddListener((val) =>
 			{
 				MuteMusic(val);
-				_ui.UpdateMusicMuteToggleVisual(val);
+				_ui.UpdateToggleVisual(_ui.MusicMuteToggleText, val);
 			});
 
 			// music mute toggle //
@@ -314,10 +374,20 @@ namespace wozware.StackerDeluxe
 			_ui.Toggle_SFXMuted.onValueChanged.AddListener((val) =>
 			{
 				MuteSFX(val);
-				_ui.UpdateSFXMuteToggleVisual(val);
+				_ui.UpdateToggleVisual(_ui.SFXMuteToggleText, val);
 			});
 
 			// sfx mute toggle //
+
+			// short countdown toggle //
+
+			_ui.Toggle_ShortCountdown.onValueChanged.AddListener((val) =>
+			{
+				_saveData.ShortCountdown = val;
+				_ui.UpdateToggleVisualGreyed(_ui.ShortCountdownToggleText, val);
+			});
+
+			// short countdown toggle //
 
 			// screen mode dropdown //
 

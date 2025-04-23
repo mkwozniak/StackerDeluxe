@@ -18,61 +18,61 @@ MonoBehaviour:
   - Thickness: 3
     Speed: 0.25
     SecondsGain: 1
-    MusicLoop: {fileID: 8300000, guid: c1d4a3c8ea725ea4e8bc0f91d25c54f0, type: 3}
+    MusicLoop: {fileID: 8300000, guid: d89bc5b489658c74e9fd1b947ee41512, type: 3}
   - Thickness: 3
     Speed: 0.2
     SecondsGain: 1
-    MusicLoop: {fileID: 8300000, guid: eaa6060e1d837274889459df69dd98c1, type: 3}
+    MusicLoop: {fileID: 8300000, guid: 80bf1d6739db8884a9d7259d8c1accc7, type: 3}
   - Thickness: 2
     Speed: 0.2
     SecondsGain: 1
-    MusicLoop: {fileID: 8300000, guid: eaa6060e1d837274889459df69dd98c1, type: 3}
+    MusicLoop: {fileID: 8300000, guid: 80bf1d6739db8884a9d7259d8c1accc7, type: 3}
   - Thickness: 2
     Speed: 0.2
     SecondsGain: 1
-    MusicLoop: {fileID: 8300000, guid: eaa6060e1d837274889459df69dd98c1, type: 3}
+    MusicLoop: {fileID: 8300000, guid: 80bf1d6739db8884a9d7259d8c1accc7, type: 3}
   - Thickness: 2
     Speed: 0.15
     SecondsGain: 0.5
-    MusicLoop: {fileID: 8300000, guid: fc342261451b3634c8c0a94059dc2df9, type: 3}
+    MusicLoop: {fileID: 8300000, guid: 15fb5f1bc5ca41d49a97ca5cda4860ac, type: 3}
   - Thickness: 2
     Speed: 0.15
     SecondsGain: 0.5
-    MusicLoop: {fileID: 8300000, guid: fc342261451b3634c8c0a94059dc2df9, type: 3}
+    MusicLoop: {fileID: 8300000, guid: 15fb5f1bc5ca41d49a97ca5cda4860ac, type: 3}
   - Thickness: 1
     Speed: 0.1
     SecondsGain: 0.5
-    MusicLoop: {fileID: 8300000, guid: 8505a5add8b94dc49b47321b10bf0238, type: 3}
+    MusicLoop: {fileID: 8300000, guid: 052e0b23d4c6cb543bedd39decd44b74, type: 3}
   - Thickness: 1
     Speed: 0.1
     SecondsGain: 0.5
-    MusicLoop: {fileID: 8300000, guid: 8505a5add8b94dc49b47321b10bf0238, type: 3}
+    MusicLoop: {fileID: 8300000, guid: 052e0b23d4c6cb543bedd39decd44b74, type: 3}
   - Thickness: 1
     Speed: 0.075
     SecondsGain: 0.25
-    MusicLoop: {fileID: 8300000, guid: 61663177fd3538e41be7ddce860e4cce, type: 3}
+    MusicLoop: {fileID: 8300000, guid: e86ba2e18bc389c4fb3e67a830c9bb5a, type: 3}
   - Thickness: 1
     Speed: 0.075
     SecondsGain: 0.25
-    MusicLoop: {fileID: 8300000, guid: 61663177fd3538e41be7ddce860e4cce, type: 3}
+    MusicLoop: {fileID: 8300000, guid: e86ba2e18bc389c4fb3e67a830c9bb5a, type: 3}
   - Thickness: 1
     Speed: 0.075
     SecondsGain: 0.25
-    MusicLoop: {fileID: 8300000, guid: 61663177fd3538e41be7ddce860e4cce, type: 3}
+    MusicLoop: {fileID: 8300000, guid: e86ba2e18bc389c4fb3e67a830c9bb5a, type: 3}
   - Thickness: 1
     Speed: 0.075
     SecondsGain: 0.25
-    MusicLoop: {fileID: 8300000, guid: 61663177fd3538e41be7ddce860e4cce, type: 3}
+    MusicLoop: {fileID: 8300000, guid: e86ba2e18bc389c4fb3e67a830c9bb5a, type: 3}
   - Thickness: 1
     Speed: 0.05
     SecondsGain: 0.25
-    MusicLoop: {fileID: 8300000, guid: 75fa32ec479f1e64fba0fec5ffe3542f, type: 3}
-  - Thickness: 1
-    Speed: 0.05
-    SecondsGain: 0.15
-    MusicLoop: {fileID: 8300000, guid: 75fa32ec479f1e64fba0fec5ffe3542f, type: 3}
+    MusicLoop: {fileID: 8300000, guid: 9754198b6d383ee4fadac3dbf8e3c06c, type: 3}
   - Thickness: 1
     Speed: 0.05
     SecondsGain: 0.15
-    MusicLoop: {fileID: 8300000, guid: 75fa32ec479f1e64fba0fec5ffe3542f, type: 3}
+    MusicLoop: {fileID: 8300000, guid: 9754198b6d383ee4fadac3dbf8e3c06c, type: 3}
+  - Thickness: 1
+    Speed: 0.05
+    SecondsGain: 0.15
+    MusicLoop: {fileID: 8300000, guid: 9754198b6d383ee4fadac3dbf8e3c06c, type: 3}
   TimeLeft: 20
