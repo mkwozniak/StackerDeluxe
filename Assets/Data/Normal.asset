@@ -75,7 +75,7 @@ MonoBehaviour:
     Speed: 0.05
     SecondsGain: 1
     MusicLoop: {fileID: 8300000, guid: 75fa32ec479f1e64fba0fec5ffe3542f, type: 3}
-  TimeLeft: 30
+  TimeLeft: 15
   Achievements:
   - Name: Normal
     Description: CLEAR NORMAL DIFFICULTY
@@ -88,12 +88,12 @@ MonoBehaviour:
     TimeThreshold: 0
     Complete: 0
   - Name: Normal
-    Description: "CLEAR NORMAL DIFFICULTY \nWITH ATLEAST 20 SECONDS"
+    Description: "CLEAR NORMAL DIFFICULTY \nWITH ATLEAST 10 SECONDS"
     AchievementType: 1
-    TimeThreshold: 20
+    TimeThreshold: 10
     Complete: 0
   - Name: Normal
-    Description: "CLEAR NORMAL DIFFICULTY \nWITH ATLEAST 30 SECONDS"
+    Description: "CLEAR NORMAL DIFFICULTY \nWITH ATLEAST 15 SECONDS"
     AchievementType: 1
-    TimeThreshold: 30
+    TimeThreshold: 15
     Complete: 0

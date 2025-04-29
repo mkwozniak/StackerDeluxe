@@ -71,6 +71,7 @@ namespace wozware.StackerDeluxe
 		[SerializeField] byte _musicState = 0;
 		[SerializeField] bool _timerEnabled = false;
 		[SerializeField] bool _inSettingsFromPause = false;
+		[SerializeField] bool _didRestart = false;
 
 		[Header("Camera States")]
 		[SerializeField] bool _lerpingCamera = false;
@@ -112,7 +113,7 @@ namespace wozware.StackerDeluxe
 			LinkUIEvents();
 
 			// populate achievements
-			InitializeAchievements(LevelDifficulties.Debug);
+			// InitializeAchievements(LevelDifficulties.Debug);
 			InitializeAchievements(LevelDifficulties.Normal);
 			InitializeAchievements(LevelDifficulties.Hard);
 			InitializeAchievements(LevelDifficulties.Expert);
@@ -307,6 +308,7 @@ namespace wozware.StackerDeluxe
 			_ui.OnFadedIn -= EnterAchievementWinMode;
 			_ui.CurrentAchievementWinIndex = 0;
 			_ui.DestroyWinAchievements();
+			SetMusic(SoundIDs.MusicAchievements);
 			StartCoroutine(_ui.PopulateWinAchievements(_currLevel.Name));
 		}
 
@@ -318,11 +320,10 @@ namespace wozware.StackerDeluxe
 		{
 			_mainMenuParticleParent.SetActive(false);
 			_ui.OnFadedIn -= EnterPregameMode;
+			_ui.EnterPregame();
 			_stageParent.SetActive(true);
 			_ui.ExitGamePaused();
 			_gridRenderer.material = _defaultGridMaterial;
-			_ui.EnterPregame();
-
 			RenderSettings.skybox = _skybox1;
 			ResetActiveGame();
 			_ui.StartFadeOut();
@@ -335,6 +336,19 @@ namespace wozware.StackerDeluxe
 			_ui.OnFadedOut -= FinishPregameMode;
 			StartCameraDamp(_bottomStage.position, _defaultCameraDampSpeed);
 			OnCameraFinishDamp += StartGame;
+		}
+
+		private void EnterPreLevelMode(LevelDifficulties difficulty)
+		{
+			if (!TrySelectStandardLevel(difficulty))
+			{
+				return;
+			}
+
+			_ui.ExitMainMenu();
+			_ui.ShowPregame(true);
+			_ui.SetPreLevelStats(_currLevel.Name,
+			GetTimeStrings(RecordKeeper.LVL_RECORDS[_currLevel.Name].TimeLeft));
 		}
 
 		private void ExitGameMode()
@@ -365,16 +379,12 @@ namespace wozware.StackerDeluxe
 			_ui.SetTimer(GetTimeStrings(_currTimeLeft));
 			EnableCountdown(true);
 			_gameState = GameStates.GameActive;
+			_didRestart = false;
 			OnCameraFinishDamp -= StartGame;
 		}
 
-		private void EnterGameAtDifficulty(LevelDifficulties difficulty)
+		private void EnterGameAtDifficulty()
 		{
-			if (!TrySelectStandardLevel(difficulty))
-			{
-				return;
-			}
-
 			_ui.StartFadeIn();
 			_ui.OnFadedIn += EnterPregameMode;
 			_ui.OnFadedIn += _ui.ExitMainMenu;
@@ -417,6 +427,7 @@ namespace wozware.StackerDeluxe
 		{
 			_gameState = GameStates.GamePaused;
 			PauseCurrentRowMusic(true);
+			SetMusic(SoundIDs.MusicPause);
 			_ui.EnterGamePaused();
 			_ui.ExitGame();
 			_currStackerRow.Pause(true);
@@ -433,6 +444,7 @@ namespace wozware.StackerDeluxe
 			_gameState = GameStates.GameActive;
 			_ui.EnterGame();
 			_ui.ExitGamePaused();
+			SetMusic(SoundIDs.Empty);
 			PauseCurrentRowMusic(false);
 			_currStackerRow.Pause(false);
 		}
@@ -497,6 +509,13 @@ namespace wozware.StackerDeluxe
 				return;
 			}
 			CreateSFX(SoundIDs.VFX_GameOver);
+		}
+
+		private void TriggerRestart()
+		{
+			_gridRenderer.material = _loseGridMaterial;
+			_canPlaceStacker = false;
+			_gameState = GameStates.Restarting;
 		}
 
 		#endregion Game Over
@@ -661,6 +680,7 @@ namespace wozware.StackerDeluxe
 
 			if (Input.GetMouseButtonDown(0) && _canPlaceStacker)
 			{
+				Log(LogTypes.GAME, "Placed Stacker Row");
 				PlaceCurrentStackerRow();
 				_canPlaceStacker = false;
 				return;
@@ -741,6 +761,25 @@ namespace wozware.StackerDeluxe
 				_inFinalGameWin = true;
 				EnterGameWin();
 				return;
+			}
+		}
+
+		private void UpdateGameRestarting()
+		{
+			StackerRow next;
+			bool hasNext = _currStackerRows.TryPop(out next);
+			if (hasNext)
+			{
+				Destroy(next.gameObject);
+				return;
+			}
+
+			if(!_didRestart)
+			{
+				_ui.ExitGamePaused();
+				EnterGameAtDifficulty();
+				Log(LogTypes.GAME, "Restarted Game");
+				_didRestart = true;
 			}
 		}
 
@@ -957,7 +996,7 @@ namespace wozware.StackerDeluxe
 
 		private bool TrySelectStandardLevel(LevelDifficulties difficulty)
 		{
-			Log(LogTypes.GAME, $"Try Selecte Difficulty: {difficulty}");
+			Log(LogTypes.GAME, $"Try Select Difficulty: {difficulty}");
 			return _gameData.TryGetStandardStackerLevel(difficulty, ref _currLevel);
 		}
 

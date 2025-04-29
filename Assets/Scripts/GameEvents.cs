@@ -38,6 +38,7 @@ namespace wozware.StackerDeluxe
 			_gameUpdates[GameStates.GameOver] = UpdateGameOver;
 			_gameUpdates[GameStates.GameWin] = UpdateGameWin;
 			_gameUpdates[GameStates.GamePaused] = UpdateGamePaused;
+			_gameUpdates[GameStates.Restarting] = UpdateGameRestarting;
 		}
 
 		/// <summary>
@@ -52,13 +53,11 @@ namespace wozware.StackerDeluxe
 
 			_ui.DifficultyBtn_Normal.RootButton.onClick.AddListener(() => {
 				_currDifficulty = LevelDifficulties.Normal;
+				EnterPreLevelMode(LevelDifficulties.Normal);
 				CreateSFX(SoundIDs.ButtonClick, 0);
-				_ui.ExitMainMenu();
-				_ui.ShowPregame(true);
 			});
 
-			_ui.DifficultyBtn_Normal.OnHoverEvent.AddListener(() =>
-			{
+			_ui.DifficultyBtn_Normal.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -68,13 +67,11 @@ namespace wozware.StackerDeluxe
 
 			_ui.DifficultyBtn_Hard.RootButton.onClick.AddListener(() => {
 				_currDifficulty = LevelDifficulties.Hard;
+				EnterPreLevelMode(LevelDifficulties.Hard);
 				CreateSFX(SoundIDs.ButtonClick, 0);
-				_ui.ExitMainMenu();
-				_ui.ShowPregame(true);
 			});
 
-			_ui.DifficultyBtn_Hard.OnHoverEvent.AddListener(() =>
-			{
+			_ui.DifficultyBtn_Hard.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -84,13 +81,11 @@ namespace wozware.StackerDeluxe
 
 			_ui.DifficultyBtn_Expert.RootButton.onClick.AddListener(() => {
 				_currDifficulty = LevelDifficulties.Expert;
+				EnterPreLevelMode(LevelDifficulties.Expert);
 				CreateSFX(SoundIDs.ButtonClick, 0);
-				_ui.ExitMainMenu();
-				_ui.ShowPregame(true);
 			});
 
-			_ui.DifficultyBtn_Expert.OnHoverEvent.AddListener(() =>
-			{
+			_ui.DifficultyBtn_Expert.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -103,8 +98,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.ChallengerBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.ChallengerBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -117,8 +111,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.ChallengerExitBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.ChallengerExitBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -127,12 +120,11 @@ namespace wozware.StackerDeluxe
 			// level start button //
 
 			_ui.LevelStartBtn.RootButton.onClick.AddListener(() => {
-				EnterGameAtDifficulty(_currDifficulty);
+				EnterGameAtDifficulty();
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.LevelStartBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.LevelStartBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -146,8 +138,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.LevelCancelBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.LevelCancelBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -163,8 +154,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.RestartBtn_GameOver.OnHoverEvent.AddListener(() =>
-			{
+			_ui.RestartBtn_GameOver.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -180,8 +170,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.ExitBtn_GameOver.OnHoverEvent.AddListener(() =>
-			{
+			_ui.ExitBtn_GameOver.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -198,8 +187,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.ContinueBtn_Win.OnHoverEvent.AddListener(() =>
-			{
+			_ui.ContinueBtn_Win.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -215,8 +203,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.RestartBtn_GameOver.OnHoverEvent.AddListener(() =>
-			{
+			_ui.RestartBtn_Win.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -232,8 +219,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.ExitBtn_Win.OnHoverEvent.AddListener(() =>
-			{
+			_ui.ExitBtn_Win.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -250,8 +236,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.AchievementsBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.AchievementsBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -268,8 +253,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.AchievementsExitBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.AchievementsExitBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -287,8 +271,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.SettingsBtn_Menu.OnHoverEvent.AddListener(() =>
-			{
+			_ui.SettingsBtn_Menu.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -317,8 +300,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.ExitSettingsBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.ExitSettingsBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -327,14 +309,12 @@ namespace wozware.StackerDeluxe
 			// settings apply button //
 
 			_ui.ApplySettingsBtn.RootButton.onClick.AddListener(() => {
-
 				SaveToSaveFile();
 				_ui.ShowSettingsAppliedText();
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.ApplySettingsBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.ApplySettingsBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -352,8 +332,7 @@ namespace wozware.StackerDeluxe
 
 			// sfx volume slider //
 
-			_ui.Slider_SFXVolume.onValueChanged.AddListener((val) =>
-			{
+			_ui.Slider_SFXVolume.onValueChanged.AddListener((val) => {
 				SetSFXVolume(val);
 			});
 
@@ -361,8 +340,7 @@ namespace wozware.StackerDeluxe
 
 			// music mute toggle //
 
-			_ui.Toggle_MusicMute.onValueChanged.AddListener((val) =>
-			{
+			_ui.Toggle_MusicMute.onValueChanged.AddListener((val) => {
 				MuteMusic(val);
 				_ui.UpdateToggleVisual(_ui.MusicMuteToggleText, val);
 			});
@@ -381,8 +359,7 @@ namespace wozware.StackerDeluxe
 
 			// short countdown toggle //
 
-			_ui.Toggle_ShortCountdown.onValueChanged.AddListener((val) =>
-			{
+			_ui.Toggle_ShortCountdown.onValueChanged.AddListener((val) => {
 				_saveData.ShortCountdown = val;
 				_ui.UpdateToggleVisualGreyed(_ui.ShortCountdownToggleText, val);
 			});
@@ -457,17 +434,31 @@ namespace wozware.StackerDeluxe
 			// pause resume btn //
 
 			_ui.Pause_ResumeBtn.RootButton.onClick.AddListener(() => {
-
 				ExitPause(toExit: false);
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.Pause_ResumeBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.Pause_ResumeBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
 			// pause resume btn //
+
+			// pause restart btn //
+
+			_ui.Pause_RestartBtn.RootButton.onClick.AddListener(() => {
+				PauseCurrentRowMusic(true);
+				_currStackerRow.Pause(false);
+				_gameState = GameStates.Restarting;
+				TriggerRestart();
+				CreateSFX(SoundIDs.ButtonClick, 0);
+			});
+
+			_ui.Pause_RestartBtn.OnHoverEvent.AddListener(() => {
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// pause restart btn //
 
 			// pause settings btn //
 
@@ -482,8 +473,7 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.Pause_SettingsBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.Pause_SettingsBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
@@ -500,12 +490,23 @@ namespace wozware.StackerDeluxe
 				CreateSFX(SoundIDs.ButtonClick, 0);
 			});
 
-			_ui.Pause_ExitBtn.OnHoverEvent.AddListener(() =>
-			{
+			_ui.Pause_ExitBtn.OnHoverEvent.AddListener(() => {
 				CreateSFX(SoundIDs.ButtonHover, 0);
 			});
 
 			// pause exit btn //
+
+			// game exit btn //
+
+			_ui.GameExitBtn.RootButton.onClick.AddListener(() => {
+				Application.Quit();
+			});
+
+			_ui.GameExitBtn.OnHoverEvent.AddListener(() => {
+				CreateSFX(SoundIDs.ButtonHover, 0);
+			});
+
+			// game exit btn //
 		}
 	}
 }

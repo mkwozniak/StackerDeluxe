@@ -99,6 +99,7 @@ namespace wozware.StackerDeluxe
 		GameWin,
 		GamePaused,
 		Challenger,
+		Restarting,
 	}
 
 	public enum LevelDifficulties
@@ -129,6 +130,8 @@ namespace wozware.StackerDeluxe
 		VFX_NewRecord,
 		MusicChallenger,
 		VFX_AchievementGain,
+		MusicAchievements,
+		MusicPause,
 	}
 
 	public enum OneShotIDs

@@ -42,12 +42,14 @@ namespace wozware.StackerDeluxe
 		public ButtonVisualModifier ChallengerBtn;
 		public ButtonVisualModifier ChallengerExitBtn;
 		public ButtonVisualModifier Pause_ResumeBtn;
+		public ButtonVisualModifier Pause_RestartBtn;
 		public ButtonVisualModifier Pause_SettingsBtn;
 		public ButtonVisualModifier Pause_ExitBtn;
 		public ButtonVisualModifier AchievementsBtn;
 		public ButtonVisualModifier AchievementsExitBtn;
 		public ButtonVisualModifier LevelStartBtn;
 		public ButtonVisualModifier LevelCancelBtn;
+		public ButtonVisualModifier GameExitBtn;
 
 		public Slider Slider_MusicVolume;
 		public Slider Slider_SFXVolume;
@@ -113,6 +115,8 @@ namespace wozware.StackerDeluxe
 		[SerializeField] Color _greyedColor;
 		[ColorUsage(true, true), SerializeField] Color _timeGainAddGlowColor;
 		[ColorUsage(true, true), SerializeField] Color _timeGainLoseGlowColor;
+		[SerializeField] CustomTextProperties _pregameLevelTitleText;
+		[SerializeField] CustomTextProperties _pregameLevelTimeText;
 
 		[Header("Settings Panel")]
 		[SerializeField] CustomTextProperties _settingsAppliedText;
@@ -312,6 +316,12 @@ namespace wozware.StackerDeluxe
 			_gameParent.SetActive(true);
 			_getReadyParent.SetActive(true);
 			_countdownParent.SetActive(false);
+		}
+
+		public void SetPreLevelStats(string lvlName, string[] timeStrings)
+		{
+			_pregameLevelTitleText.SetText($"LEVEL: {lvlName}");
+			_pregameLevelTimeText.SetText($"BEST TIME: {timeStrings[0]}:{timeStrings[1]}:{timeStrings[2]}");
 		}
 
 		public void EnterChallenger()
